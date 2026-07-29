@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PropertyController;
 use App\Http\Controllers\Api\V1\PropertyUnitController;
 use App\Http\Controllers\Api\V1\ReceiptController;
+use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -116,5 +117,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard/tenant', [DashboardController::class, 'tenant']);
         Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
         Route::get('/dashboard/occupancy', [DashboardController::class, 'occupancy']);
+
+        Route::get('/subscription', [SubscriptionController::class, 'show']);
+        Route::post('/subscription/initiate', [SubscriptionController::class, 'initiate']);
+
+        Route::get('/admin/owners', [SubscriptionController::class, 'adminOverview']);
+        Route::put('/admin/subscriptions/{subscription}/validate', [SubscriptionController::class, 'validateSubscription']);
     });
 });
