@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Subscription\InitiateSubscriptionRequest;
+use App\Http\Resources\LeaseResource;
 use App\Http\Resources\SubscriptionResource;
 use App\Http\Resources\UserResource;
 use App\Models\Subscription;
+use App\Models\User;
 use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +63,26 @@ class SubscriptionController extends Controller
             new SubscriptionResource($this->subscriptions->validate($subscription)),
             'Abonnement validé.',
         );
+    }
+
+    /**
+     * Détail d'un propriétaire pour l'admin : ses locataires (baux actifs)
+     * et l'historique de ses paiements d'abonnement.
+     */
+    public function ownerDetail(Request $request, User $owner): JsonResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        abort_unless($owner->isOwner(), 404);
+
+        $detail = $this->subscriptions->ownerDetail($owner);
+
+        return $this->success([
+            'owner' => new UserResource($detail['owner']),
+            'leases' => LeaseResource::collection($detail['leases']),
+            'subscriptions' => SubscriptionResource::collection($detail['subscriptions']),
+            'subscription_status' => $detail['subscription_status'],
+            'next_due_date' => $detail['next_due_date'],
+        ], '');
     }
 
     /**

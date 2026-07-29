@@ -67,4 +67,46 @@ class AdminOwnersOverviewTest extends TestCase
 
         $this->actingAs($owner)->getJson('/api/v1/admin/owners')->assertForbidden();
     }
+
+    public function test_admin_sees_owner_detail_with_tenants_and_subscription_history(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $owner = User::factory()->owner()->create();
+        $property = Property::factory()->rented()->create(['owner_id' => $owner->id]);
+        $lease = Lease::factory()->create([
+            'owner_id' => $owner->id,
+            'property_id' => $property->id,
+            'status' => 'active',
+        ]);
+        Subscription::factory()->pending()->create(['owner_id' => $owner->id]);
+
+        $response = $this->actingAs($admin)->getJson("/api/v1/admin/owners/{$owner->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('data.owner.id', $owner->id);
+        $response->assertJsonPath('data.subscription_status', 'pending');
+        $response->assertJsonCount(1, 'data.leases');
+        $response->assertJsonPath('data.leases.0.tenant.id', $lease->tenant_id);
+        $response->assertJsonCount(1, 'data.subscriptions');
+    }
+
+    public function test_owner_cannot_access_another_owners_detail(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $otherOwner = User::factory()->owner()->create();
+
+        $this->actingAs($owner)
+            ->getJson("/api/v1/admin/owners/{$otherOwner->id}")
+            ->assertForbidden();
+    }
+
+    public function test_owner_detail_404s_for_a_non_owner_user(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $tenant = User::factory()->tenant()->create();
+
+        $this->actingAs($admin)
+            ->getJson("/api/v1/admin/owners/{$tenant->id}")
+            ->assertNotFound();
+    }
 }

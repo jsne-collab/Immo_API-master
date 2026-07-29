@@ -119,6 +119,34 @@ class SubscriptionService
     }
 
     /**
+     * Détail d'un propriétaire pour l'admin : ses baux actifs (donc ses
+     * locataires), et l'historique complet de ses abonnements.
+     *
+     * @return array{owner: User, leases: \Illuminate\Support\Collection<int, Lease>, subscriptions: \Illuminate\Support\Collection<int, Subscription>, subscription_status: string, next_due_date: ?string}
+     */
+    public function ownerDetail(User $owner): array
+    {
+        $leases = Lease::where('owner_id', $owner->id)
+            ->where('status', Lease::STATUS_ACTIVE)
+            ->with(['property', 'tenant'])
+            ->get();
+
+        $subscriptions = Subscription::where('owner_id', $owner->id)
+            ->orderByDesc('period_start')
+            ->get();
+
+        $status = $this->statusFor($owner);
+
+        return [
+            'owner' => $owner,
+            'leases' => $leases,
+            'subscriptions' => $subscriptions,
+            'subscription_status' => $status['status'],
+            'next_due_date' => $status['next_due_date'],
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      */
     private function upsertPaymentMethod(User $owner, array $data): PaymentMethod

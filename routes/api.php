@@ -122,6 +122,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/subscription/initiate', [SubscriptionController::class, 'initiate']);
 
         Route::get('/admin/owners', [SubscriptionController::class, 'adminOverview']);
+        Route::get('/admin/owners/{owner}', [SubscriptionController::class, 'ownerDetail']);
         Route::put('/admin/subscriptions/{subscription}/validate', [SubscriptionController::class, 'validateSubscription']);
     });
 });
