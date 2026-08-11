@@ -22,8 +22,8 @@ COPY . .
 # Installer les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
-# Nettoyer les caches Laravel
-RUN php artisan config:clear && php artisan route:clear
+
+
 
 # Exposer le port
 EXPOSE 8000
