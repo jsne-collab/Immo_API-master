@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     libonig-dev \
-    && docker-php-ext-install pdo pdo_mysql zip tokenizer
+    && docker-php-ext-install pdo pdo_mysql zip mbstring
 
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
