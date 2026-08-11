@@ -12,5 +12,6 @@ RUN apt-get update && apt-get install -y \
     git \
     libonig-dev \
     && docker-php-ext-install pdo pdo_mysql zip mbstring tokenizer
+
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
