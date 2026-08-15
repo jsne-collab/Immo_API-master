@@ -1,37 +1,30 @@
-# Image PHP officielle
-FROM php:8.2-cli
+# Utiliser une image PHP avec extensions nécessaires
+FROM php:8.2-fpm
 
-# Installer les extensions nécessaires
+# Installer les dépendances système
 RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    unzip \
-    git \
-    libonig-dev \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring \
-    && rm -rf /var/lib/apt/lists/*
+    git unzip libpq-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql zip
 
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Définir le dossier de travail
-WORKDIR /app
-
-# Copier le projet
+# Copier ton code Laravel
+WORKDIR /var/www/html
 COPY . .
 
 # Installer les dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader --prefer-dist
+RUN composer install --no-dev --optimize-autoloader
 
-
-
+# Générer cache optimisé
+RUN php artisan config:clear \
+    && php artisan cache:clear \
+    && php artisan route:clear \
+    && php artisan view:clear \
+    && php artisan migrate --force
 
 # Exposer le port
-EXPOSE 8000
+EXPOSE 80
 
-# Démarrer Laravel
-# storage:link --force est relancé à chaque démarrage du conteneur : sur
-# Render (sans volume persistant), le filesystem repart de l'image à chaque
-# redéploiement/redémarrage, donc le lien symbolique public/storage ->
-# storage/app/public doit être recréé à chaque fois, sinon les URLs d'images
-# (biens, maintenance) et de PDF (contrats, quittances) renvoient du 404.
-CMD php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# Commande de démarrage
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
