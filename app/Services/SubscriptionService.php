@@ -45,6 +45,17 @@ class SubscriptionService
     }
 
     /**
+     * Formules disponibles (mensuel/annuel), telles qu'affichées au
+     * propriétaire avant de choisir — voir config/subscription.php.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function plans(): array
+    {
+        return config('subscription.plans');
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      */
     public function initiate(User $owner, array $data): Subscription
@@ -61,11 +72,15 @@ class SubscriptionService
             $paymentMethodId = $this->upsertPaymentMethod($owner, $data)->id;
         }
 
+        $plan = $data['plan'] ?? config('subscription.default_plan');
+        $planConfig = config("subscription.plans.{$plan}");
+
         return Subscription::create([
             'owner_id' => $owner->id,
-            'amount' => config('subscription.amount'),
+            'amount' => $planConfig['amount'],
+            'plan' => $plan,
             'period_start' => $start->toDateString(),
-            'period_end' => $start->copy()->addMonths((int) config('subscription.period_months'))->toDateString(),
+            'period_end' => $start->copy()->addMonths((int) $planConfig['period_months'])->toDateString(),
             'payment_method_id' => $paymentMethodId,
             'status' => Subscription::STATUS_PENDING,
             'reference' => $data['reference'] ?? null,

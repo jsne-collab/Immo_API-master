@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Dashboard;
 
+use App\Models\Expense;
 use App\Models\Lease;
 use App\Models\Payment;
 use App\Models\Property;
@@ -54,6 +55,16 @@ class OwnerDashboardTest extends TestCase
         Property::factory()->create(['owner_id' => $owner->id, 'status' => 'available']);
         Property::factory()->create(['owner_id' => $owner->id, 'status' => 'available']);
 
+        // Charge enregistrée sur le bien : doit être déduite du solde net
+        // "toutes périodes" (100000 + 50000 revenus validés), pas seulement
+        // du revenu du mois en cours.
+        Expense::factory()->create([
+            'owner_id' => $owner->id,
+            'property_id' => $property->id,
+            'amount' => 30000,
+            'expense_date' => '2026-06-15',
+        ]);
+
         $response = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/dashboard/owner');
 
         $response->assertOk();
@@ -62,6 +73,9 @@ class OwnerDashboardTest extends TestCase
         $this->assertEquals(100000.0, $data['monthly_revenue']);
         $this->assertEquals(50000.0, $data['previous_month_revenue']);
         $this->assertEquals(100.0, $data['revenue_variation_percent']);
+        $this->assertEquals(150000.0, $data['total_revenue']);
+        $this->assertEquals(30000.0, $data['total_expenses']);
+        $this->assertEquals(120000.0, $data['net_balance']);
         $this->assertSame(1, $data['pending_payments_count']);
         $this->assertSame(2, $data['available_properties_count']);
         // 1 bien loué (celui du bail) + 2 disponibles = 3 biens, 1 loué -> 33.3%.

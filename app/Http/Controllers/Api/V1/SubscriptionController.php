@@ -33,7 +33,11 @@ class SubscriptionController extends Controller
             'status' => $status['status'],
             'next_due_date' => $status['next_due_date'],
             'current' => $status['current'] ? new SubscriptionResource($status['current']) : null,
-            'amount' => (float) config('subscription.amount'),
+            'plans' => collect($this->subscriptions->plans())->map(fn (array $plan) => [
+                'label' => $plan['label'],
+                'amount' => (float) $plan['amount'],
+                'period_months' => $plan['period_months'],
+            ]),
         ], '');
     }
 

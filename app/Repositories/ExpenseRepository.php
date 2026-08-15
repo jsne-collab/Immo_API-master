@@ -56,6 +56,11 @@ class ExpenseRepository
         return (float) Expense::where('property_id', $propertyId)->sum('amount');
     }
 
+    public function totalForOwner(int $ownerId): float
+    {
+        return (float) Expense::where('owner_id', $ownerId)->sum('amount');
+    }
+
     /**
      * @param  array<string, mixed>  $filters
      */

@@ -15,6 +15,7 @@ class SubscriptionResource extends JsonResource
         return [
             'id' => $this->id,
             'amount' => (float) $this->amount,
+            'plan' => $this->plan,
             'period_start' => $this->period_start->toDateString(),
             'period_end' => $this->period_end->toDateString(),
             'payment_method' => $this->paymentMethod ? [

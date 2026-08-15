@@ -7,6 +7,7 @@ use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Models\User;
+use App\Repositories\ExpenseRepository;
 use App\Support\LeaseDueDateCalculator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -16,6 +17,8 @@ class DashboardService
     private const CACHE_TTL_SECONDS = 300;
 
     private const REVENUE_MONTHS = 6;
+
+    public function __construct(private readonly ExpenseRepository $expenses) {}
 
     public static function ownerCacheKey(int $ownerId): string
     {
@@ -53,6 +56,18 @@ class DashboardService
             $rentedProperties = Property::where('owner_id', $owner->id)->where('status', Property::STATUS_RENTED)->count();
             $availableProperties = Property::where('owner_id', $owner->id)->where('status', Property::STATUS_AVAILABLE)->count();
 
+            // Solde net "toutes périodes confondues" (pas seulement le mois en
+            // cours comme monthly_revenue) : c'est le pendant de
+            // ExpenseService::netBalanceForProperty() mais agrégé sur tous les
+            // biens du propriétaire plutôt que sur un seul — évite l'ancien bug
+            // où le frontend comparait le revenu du mois courant à la somme de
+            // TOUTES les charges jamais enregistrées (audit du 13/08/2026).
+            $totalRevenue = (float) Payment::whereIn('lease_id', $leaseIds)
+                ->where('status', 'validated')
+                ->sum('amount');
+
+            $totalExpenses = $this->expenses->totalForOwner($owner->id);
+
             $recentPayments = Payment::whereIn('lease_id', $leaseIds)
                 ->with(['lease.property', 'lease.owner', 'tenant', 'paymentMethod'])
                 ->latest('payment_date')
@@ -70,6 +85,9 @@ class DashboardService
                 'monthly_revenue' => $monthlyRevenue,
                 'previous_month_revenue' => $previousMonthRevenue,
                 'revenue_variation_percent' => $this->variationPercent($monthlyRevenue, $previousMonthRevenue),
+                'total_revenue' => $totalRevenue,
+                'total_expenses' => $totalExpenses,
+                'net_balance' => $totalRevenue - $totalExpenses,
                 'occupancy_rate' => $totalProperties > 0 ? round($rentedProperties / $totalProperties * 100, 1) : 0.0,
                 'pending_payments_count' => Payment::whereIn('lease_id', $leaseIds)->where('status', 'pending')->count(),
                 'available_properties_count' => $availableProperties,

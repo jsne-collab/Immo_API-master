@@ -29,4 +29,9 @@ RUN composer install --no-dev --optimize-autoloader --prefer-dist
 EXPOSE 8000
 
 # Démarrer Laravel
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+# storage:link --force est relancé à chaque démarrage du conteneur : sur
+# Render (sans volume persistant), le filesystem repart de l'image à chaque
+# redéploiement/redémarrage, donc le lien symbolique public/storage ->
+# storage/app/public doit être recréé à chaque fois, sinon les URLs d'images
+# (biens, maintenance) et de PDF (contrats, quittances) renvoient du 404.
+CMD php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=$PORT

@@ -27,6 +27,17 @@ class SubscriptionTest extends TestCase
         $response->assertOk()->assertJsonPath('data.status', 'never');
     }
 
+    public function test_subscription_endpoint_exposes_monthly_and_yearly_plans(): void
+    {
+        $owner = User::factory()->owner()->create();
+
+        $response = $this->actingAs($owner)->getJson('/api/v1/subscription');
+
+        $response->assertOk()
+            ->assertJsonPath('data.plans.monthly.amount', 10000)
+            ->assertJsonPath('data.plans.yearly.amount', 50000);
+    }
+
     public function test_tenant_cannot_see_owner_subscription_endpoint(): void
     {
         $tenant = User::factory()->tenant()->create();
@@ -40,15 +51,42 @@ class SubscriptionTest extends TestCase
 
         $response = $this->actingAs($owner)->postJson('/api/v1/subscription/initiate', [
             'method_type' => 'mobile_money',
-            'method_provider' => 'Flooz',
+            'method_provider' => 'T-Money',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.status', 'pending');
+        // Sans "plan" précisé, la formule mensuelle (10 000 FCFA) s'applique
+        // par défaut (config('subscription.default_plan')).
+        $response->assertCreated()
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.plan', 'monthly')
+            ->assertJsonPath('data.amount', 10000);
 
         $this->assertDatabaseHas('subscriptions', [
             'owner_id' => $owner->id,
             'status' => Subscription::STATUS_PENDING,
+            'plan' => 'monthly',
         ]);
+    }
+
+    public function test_owner_can_initiate_a_yearly_subscription_payment(): void
+    {
+        $owner = User::factory()->owner()->create();
+
+        $response = $this->actingAs($owner)->postJson('/api/v1/subscription/initiate', [
+            'plan' => 'yearly',
+            'method_type' => 'mobile_money',
+            'method_provider' => 'Moov Money',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.plan', 'yearly')
+            ->assertJsonPath('data.amount', 50000);
+
+        $subscription = Subscription::where('owner_id', $owner->id)->firstOrFail();
+        $this->assertEquals(
+            $subscription->period_start->copy()->addMonths(12)->toDateString(),
+            $subscription->period_end->toDateString(),
+        );
     }
 
     public function test_tenant_cannot_initiate_a_subscription_payment(): void

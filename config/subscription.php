@@ -6,14 +6,25 @@ return [
     | Abonnement plateforme (droits d'utilisation propriétaire)
     |--------------------------------------------------------------------------
     |
-    | Montant (FCFA) et périodicité (en mois) que chaque propriétaire doit
-    | payer pour utiliser l'app — distinct des loyers (qui vont du locataire
-    | au propriétaire). Valeur placeholder en attendant le tarif définitif :
-    | c'est le SEUL endroit à modifier pour changer le prix/la fréquence.
+    | Montant (FCFA) et périodicité que chaque propriétaire doit payer pour
+    | utiliser l'app — distinct des loyers (qui vont du locataire au
+    | propriétaire). Deux formules au choix du propriétaire (audit du
+    | 13/08/2026) : c'est le SEUL endroit à modifier pour changer les tarifs.
     |
     */
 
-    'amount' => env('SUBSCRIPTION_AMOUNT', 5000),
+    'plans' => [
+        'monthly' => [
+            'label' => 'Mensuel',
+            'amount' => env('SUBSCRIPTION_MONTHLY_AMOUNT', 10000),
+            'period_months' => 1,
+        ],
+        'yearly' => [
+            'label' => 'Annuel',
+            'amount' => env('SUBSCRIPTION_YEARLY_AMOUNT', 50000),
+            'period_months' => 12,
+        ],
+    ],
 
-    'period_months' => env('SUBSCRIPTION_PERIOD_MONTHS', 1),
+    'default_plan' => 'monthly',
 ];

@@ -21,9 +21,14 @@ class Subscription extends Model
 
     public const STATUS_PAID = 'paid';
 
+    public const PLAN_MONTHLY = 'monthly';
+
+    public const PLAN_YEARLY = 'yearly';
+
     protected $fillable = [
         'owner_id',
         'amount',
+        'plan',
         'period_start',
         'period_end',
         'payment_method_id',
