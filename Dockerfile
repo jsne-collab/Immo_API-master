@@ -26,7 +26,7 @@ RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
 
 # Exposer le port
-EXPOSE 8000
+EXPOSE $PORT
 
 # Démarrer Laravel
 # storage:link --force est relancé à chaque démarrage du conteneur : sur
