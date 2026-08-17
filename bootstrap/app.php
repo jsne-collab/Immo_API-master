@@ -5,7 +5,6 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -60,24 +59,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => $e->getMessage() ?: 'An error occurred.',
                     'errors' => null,
                 ], $e->getStatusCode());
-            }
-        });
-
-        // Capture générique pour les exceptions inattendues en API
-        $exceptions->render(function (Throwable $e, $request) {
-            if ($request->is('api/*')) {
-                Log::error('Unexpected API error', [
-                    'exception' => $e,
-                    'url' => $request->url(),
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => config('app.debug') 
-                        ? $e->getMessage() 
-                        : 'An unexpected error occurred. Please try again later.',
-                    'errors' => null,
-                ], 500);
             }
         });
     })->create();
