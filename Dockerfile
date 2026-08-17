@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     libonig-dev \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Composer
@@ -23,12 +24,6 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
 
-FROM mysql:8
-ENV MYSQL_DATABASE=gestion_immo
-ENV MYSQL_USER=immo_user
-ENV MYSQL_PASSWORD=secret123
-ENV MYSQL_ROOT_PASSWORD=root123
-EXPOSE 3306
 
 
 # Exposer le port
