@@ -16,8 +16,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-
-    // Health check
+// Health check
     Route::get('/health', function () {
         return response()->json([
             'success' => true,
