@@ -23,6 +23,12 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
 
+FROM mysql:8
+ENV MYSQL_DATABASE=gestion_immo
+ENV MYSQL_USER=immo_user
+ENV MYSQL_PASSWORD=secret123
+ENV MYSQL_ROOT_PASSWORD=root123
+EXPOSE 3306
 
 
 # Exposer le port
