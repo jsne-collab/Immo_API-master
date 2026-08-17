@@ -7,15 +7,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     libonig-dev \
-    libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Définir le dossier de travail
-WORKDIR /app
+
 
 # Copier le projet
 COPY . .
