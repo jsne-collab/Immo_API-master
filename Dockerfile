@@ -34,4 +34,4 @@ EXPOSE $PORT
 # redéploiement/redémarrage, donc le lien symbolique public/storage ->
 # storage/app/public doit être recréé à chaque fois, sinon les URLs d'images
 # (biens, maintenance) et de PDF (contrats, quittances) renvoient du 404.
-CMD php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate --force && php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=$PORT
